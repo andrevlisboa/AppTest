@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
+from .. import crud, models, schemas
 from .database import SessionLocal, engine
 
 import os
@@ -25,6 +25,12 @@ def get_db():
         db.close()
 
 
+# vue 
+@app.get("/app")
+def read_index():
+    return FileResponse("../frontend/app.html")
+
+##
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
@@ -34,7 +40,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/users/", response_model=List[schemas.User])
-def read_all_users(db: Session = Depends(get_db)):
+def read_all_users(db: Session = Depends(get_db)) -> dict:
     users = crud.get_users(db)
     return users
 
@@ -48,7 +54,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/main_dishes/", response_model=List[schemas.MainDish])
-def read_all_main_dishes(db: Session = Depends(get_db)):
+def read_all_main_dishes(db: Session = Depends(get_db)) -> dict:
     main_dishes = crud.get_main_dishes(db)
     return main_dishes
 
@@ -66,7 +72,7 @@ def read_user_main_dishes(user_id: int, db: Session = Depends(get_db)):
     return main_dish
 
 @app.get("/users/{user_id}/main_dishes/{type}", response_model=List[schemas.MainDish])
-def read_user_main_dishes_by_type(user_id: int, type: str, db: Session = Depends(get_db)):
+def read_user_main_dishes_by_type(user_id: int, type: str, db: Session = Depends(get_db)) -> dict:
     main_dish = crud.get_user_main_dishes_by_type(db, type=type, user_id=user_id)
     return main_dish
 
@@ -82,7 +88,7 @@ async def create_main_dish_image(png_image: UploadFile, main_dish_id: int, user_
 
 
 @app.get("/users/{user_id}/main_dishes/{main_dish_id}/image/", response_class=FileResponse)
-async def read_main_dish_image(main_dish_id: int, user_id: int):
+async def read_main_dish_image(main_dish_id: int, user_id: int) -> dict:
     try:
         file_name = f"{user_id}_{main_dish_id}.png"
         path = f"{IMAGEDIR}{file_name}"
@@ -126,4 +132,7 @@ async def delete_main_dish(main_dish_id: int,  db: Session = Depends(get_db)):
         return {"ok": True}
     except:
         raise HTTPException(status_code=404, detail="Main Dish not found")
+
+
+
 
